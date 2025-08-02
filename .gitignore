@@ -43,3 +43,8 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+
+# Add any custom files or directories that should be ignored here
+# For example:
+assets/.env
