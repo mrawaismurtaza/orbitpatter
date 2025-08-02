@@ -1,3 +1,4 @@
+import 'package:device_preview/device_preview.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -27,7 +28,12 @@ void main() async{
 
   _setupDependencies();
 
-  runApp(const MyApp());
+  runApp(
+    DevicePreview(
+      enabled: false, // Set to true to enable Device Preview
+      builder: (context) => const MyApp(),
+    ),
+  );
 }
 
 void _setupDependencies() {

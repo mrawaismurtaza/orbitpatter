@@ -35,21 +35,24 @@ class _HomeState extends State<Home> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: BlocConsumer<LoginBloc, LoginState>(
-          builder: (context, state) {
-            return CustomButton(
-              text: 'Logout',
-              onPressed: () {
-                context.read<LoginBloc>().add(ResetLoginEvent());
-              },
-            );
-          },
-          listener: (context, state) async {
-            if (state is LoginReset) {
-                context.go('/login', extra: {'showLogoutSuccess': true});
-            }
-          },
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Center(
+          child: BlocConsumer<LoginBloc, LoginState>(
+            builder: (context, state) {
+              return CustomButton(
+                text: 'Logout',
+                onPressed: () {
+                  context.read<LoginBloc>().add(ResetLoginEvent());
+                },
+              );
+            },
+            listener: (context, state) async {
+              if (state is LoginReset) {
+                  context.go('/login', extra: {'showLogoutSuccess': true});
+              }
+            },
+          ),
         ),
       ),
     );
