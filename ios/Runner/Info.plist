@@ -27,6 +27,14 @@
 	</array>
 	<!-- End of the Google Sign-in Section -->
 
+	<!-- Location Permissions -->
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>This app needs access to your location to show nearby venues.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>This app needs access to your location at all times to provide background location features.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>This app needs access to your location even when running in the background.</string>
+
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>

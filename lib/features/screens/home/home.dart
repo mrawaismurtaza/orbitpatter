@@ -1,13 +1,10 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:go_router/go_router.dart';
 import 'package:orbitpatter/core/utils/flushbar.dart';
-import 'package:orbitpatter/features/blocs/auth/login_bloc.dart';
-import 'package:orbitpatter/features/blocs/auth/login_event.dart';
-import 'package:orbitpatter/features/blocs/auth/login_state.dart';
+import 'package:orbitpatter/features/blocs/location/location_bloc.dart';
+import 'package:orbitpatter/features/blocs/location/location_event.dart';
+import 'package:orbitpatter/features/blocs/location/location_state.dart';
 import 'package:orbitpatter/features/screens/home/widgets/flutter_map.dart';
-import 'package:orbitpatter/features/shared_widgets/button.dart';
 
 class Home extends StatefulWidget {
   final Object? extra;
@@ -31,6 +28,11 @@ class _HomeState extends State<Home> {
         );
       }
     });
+
+    Future.delayed(const Duration(seconds: 2), () {
+      // Navigate to another screen or perform another action
+      context.read<LocationBloc>().add(FetchLocationEvent());
+    });
   }
 
   @override
@@ -44,13 +46,30 @@ class _HomeState extends State<Home> {
           children: [
             Expanded(
               flex: 2,
-              child: CustomMap(
-                markerCoordinates: [
-                  [37.7749, -122.4194], // Example coordinates (San Francisco)
-                  [34.0522, -118.2437], // Example coordinates (Los Angeles)
-                ],
-                zoomLevel: 5.0,
-                initialCenter: [34.0522, -118.2437], // Example initial center (California)
+              child: BlocBuilder<LocationBloc, LocationState>(
+                builder: (context, state) {
+                  if (state is LocationLoading) {
+                    return const Center(
+                      child: CircularProgressIndicator(),
+                    );
+                  } else if (state is LocationLoaded) {
+                    final loc = state.location as Map<String, double>;
+                    return CustomMap(
+                      markerCoordinates: [
+                        [loc['latitude']!, loc['longitude']!],
+                      ],
+                      zoomLevel: 12.0,
+                      initialCenter: [loc['latitude']!, loc['longitude']!],
+                    );
+                  } else if (state is LocationError) {
+                    return Center(
+                      child: Text('Error: ${state.message}'),
+                    );
+                  }
+                  return const Center(
+                    child: Text('Press the button to fetch location'),
+                  );
+                }
               ),
             ),
             Spacer(),

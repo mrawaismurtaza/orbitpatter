@@ -5,9 +5,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get_it/get_it.dart';
 import 'package:orbitpatter/core/routes/app_router.dart';
+import 'package:orbitpatter/core/services/location_service.dart';
 import 'package:orbitpatter/core/theme/app_theme.dart';
 import 'package:orbitpatter/data/repositories/auth_repository.dart';
 import 'package:orbitpatter/features/blocs/auth/login_bloc.dart';
+import 'package:orbitpatter/features/blocs/location/location_bloc.dart';
 import 'package:orbitpatter/firebase_options.dart';
 
 final getIt = GetIt.instance;
@@ -38,12 +40,14 @@ void main() async{
 
 void _setupDependencies() {
   getIt.registerSingleton<AuthRepository>(AuthRepository());
+  getIt.registerSingleton<LocationService>(LocationService()); // Add this
 
 
   // Register other dependencies as needed
   getIt.registerFactory<LoginBloc>(() => LoginBloc(
     authRepository: getIt<AuthRepository>(),
   ));
+  getIt.registerFactory<LocationBloc>(() => LocationBloc(getIt<LocationService>()));
 }
 
 class MyApp extends StatelessWidget {
@@ -61,6 +65,9 @@ class MyApp extends StatelessWidget {
       child: MultiBlocProvider(
         providers: [
           BlocProvider(create: (context) => getIt<LoginBloc>()),
+          BlocProvider<LocationBloc>(
+          create: (_) => getIt<LocationBloc>(),
+        ),
         ],
         child:  MaterialApp.router(
           debugShowCheckedModeBanner: false,
