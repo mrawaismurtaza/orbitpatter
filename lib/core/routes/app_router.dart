@@ -1,7 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
-import 'package:orbitpatter/features/screens/home.dart';
-import 'package:orbitpatter/features/screens/login.dart';
+import 'package:orbitpatter/features/screens/home/home.dart';
+import 'package:orbitpatter/features/screens/login/login.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(

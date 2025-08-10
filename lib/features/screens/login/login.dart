@@ -6,7 +6,8 @@ import 'package:orbitpatter/core/utils/flushbar.dart';
 import 'package:orbitpatter/features/blocs/auth/login_bloc.dart';
 import 'package:orbitpatter/features/blocs/auth/login_event.dart';
 import 'package:orbitpatter/features/blocs/auth/login_state.dart';
-import 'package:orbitpatter/features/widgets/button.dart';
+import 'package:orbitpatter/features/shared_widgets/button.dart';
+import 'package:orbitpatter/features/shared_widgets/curve_clipper.dart';
 
 class Login extends StatefulWidget {
   final Object? extra;
@@ -174,27 +175,4 @@ class _LoginState extends State<Login> {
       ),
     );
   }
-}
-
-// 🔹 Custom clipper for bottom curve
-class BottomCurveClipper extends CustomClipper<Path> {
-  @override
-  Path getClip(Size size) {
-    Path path = Path();
-
-    path.lineTo(0, size.height - 50); // Start from bottom left up
-    path.quadraticBezierTo(
-      size.width / 2,
-      size.height,
-      size.width,
-      size.height - 50,
-    );
-    path.lineTo(size.width, 0); // Top right
-    path.close();
-
-    return path;
-  }
-
-  @override
-  bool shouldReclip(CustomClipper<Path> oldClipper) => false;
 }

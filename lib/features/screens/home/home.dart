@@ -6,7 +6,8 @@ import 'package:orbitpatter/core/utils/flushbar.dart';
 import 'package:orbitpatter/features/blocs/auth/login_bloc.dart';
 import 'package:orbitpatter/features/blocs/auth/login_event.dart';
 import 'package:orbitpatter/features/blocs/auth/login_state.dart';
-import 'package:orbitpatter/features/widgets/button.dart';
+import 'package:orbitpatter/features/screens/home/widgets/flutter_map.dart';
+import 'package:orbitpatter/features/shared_widgets/button.dart';
 
 class Home extends StatefulWidget {
   final Object? extra;
@@ -36,23 +37,30 @@ class _HomeState extends State<Home> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Center(
-          child: BlocConsumer<LoginBloc, LoginState>(
-            builder: (context, state) {
-              return CustomButton(
-                text: 'Logout',
-                onPressed: () {
-                  context.read<LoginBloc>().add(ResetLoginEvent());
-                },
-              );
-            },
-            listener: (context, state) async {
-              if (state is LoginReset) {
-                  context.go('/login', extra: {'showLogoutSuccess': true});
-              }
-            },
-          ),
+        padding: const EdgeInsets.only(top: 40.0, bottom: 20.0, left: 20.0, right: 20.0),
+        child: Flex(
+        
+          direction: Axis.vertical,
+          children: [
+            Expanded(
+              flex: 2,
+              child: CustomMap(
+                markerCoordinates: [
+                  [37.7749, -122.4194], // Example coordinates (San Francisco)
+                  [34.0522, -118.2437], // Example coordinates (Los Angeles)
+                ],
+                zoomLevel: 5.0,
+                initialCenter: [34.0522, -118.2437], // Example initial center (California)
+              ),
+            ),
+            Spacer(),
+            Expanded(
+              flex: 3,
+              child: Container(
+                color: Colors.blue,
+              ),
+            ),
+          ],
         ),
       ),
     );
