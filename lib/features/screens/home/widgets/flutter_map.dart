@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -17,7 +18,7 @@ const CustomMap({
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(25),
+      borderRadius: BorderRadius.circular(10),
       child: FlutterMap(
         
         options: MapOptions(
@@ -39,7 +40,7 @@ const CustomMap({
               width: 40,
               height: 40,
               child: const Icon(
-                Icons.location_on,
+                CupertinoIcons.location_solid,
                 size: 40,
                 color: Colors.red,
               ),

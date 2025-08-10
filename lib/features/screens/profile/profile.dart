@@ -7,7 +7,8 @@ import 'package:orbitpatter/features/blocs/auth/login_state.dart';
 import 'package:orbitpatter/features/shared_widgets/button.dart';
 
 class Profile extends StatefulWidget {
-  const Profile({super.key});
+  final Object? extra;
+  const Profile({super.key, this.extra});
 
   @override
   State<Profile> createState() => _ProfileState();

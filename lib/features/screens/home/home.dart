@@ -3,10 +3,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:orbitpatter/core/services/hive_service.dart';
 import 'package:orbitpatter/core/utils/flushbar.dart';
-import 'package:orbitpatter/data/models/location.dart';
 import 'package:orbitpatter/features/blocs/location/location_bloc.dart';
 import 'package:orbitpatter/features/blocs/location/location_event.dart';
 import 'package:orbitpatter/features/blocs/location/location_state.dart';
+import 'package:orbitpatter/features/screens/home/widgets/catogory_filters.dart';
 import 'package:orbitpatter/features/screens/home/widgets/flutter_map.dart';
 import 'package:orbitpatter/main.dart';
 import 'package:redacted/redacted.dart';
@@ -20,9 +20,22 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
+  String? selectedCategory;
+  final List<String> categories = [
+    '🍽️ Food',
+    '🛍️ Shopping',
+    '🎭 Culture',
+    '📸 Sights',
+    '🕌 Religion',
+    '🌳 Nature',
+  ];
+
   @override
   void initState() {
     super.initState();
+
+    selectedCategory = categories.first;
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final extra = widget.extra as Map<String, dynamic>?;
       if (extra?['showLoginSuccess'] == true) {
@@ -34,7 +47,7 @@ class _HomeState extends State<Home> {
     });
 
     Future.delayed(const Duration(seconds: 2), () {
-      // Navigate to another screen or perform another action
+      if (!mounted) return;
       context.read<LocationBloc>().add(FetchLocationEvent());
     });
   }
@@ -52,8 +65,23 @@ class _HomeState extends State<Home> {
         child: Flex(
           direction: Axis.vertical,
           children: [
+            SizedBox(
+              height: 48,
+              child: CategoryFilters(
+                selectedCategory: selectedCategory,
+                onCategorySelected: (category) {
+                  setState(() {
+                    selectedCategory = category;
+                  });
+                  print('Selected category: $category');
+                  // You can also update the state or perform other actions here
+                },
+                categories: categories,
+              ),
+            ),
+            Spacer(flex: 1),
             Expanded(
-              flex: 2,
+              flex: 10,
               child: BlocBuilder<LocationBloc, LocationState>(
                 builder: (context, state) {
                   if (state is LocationLoading) {
@@ -122,10 +150,28 @@ class _HomeState extends State<Home> {
               ),
             ),
             Spacer(),
-            Expanded(flex: 3, child: Container(color: Colors.blue)),
+            Expanded(
+              flex: 20,
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    Container(
+                      height: 400,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                    const SizedBox(height: 10),
+                    Container(
+                      height: 400,
+                      color: Theme.of(context).colorScheme.secondary,
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
       ),
+      
     );
   }
 }
