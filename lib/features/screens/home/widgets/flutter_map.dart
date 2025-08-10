@@ -16,9 +16,10 @@ const CustomMap({
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(border: Border.all(color: Colors.blue)),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(25),
       child: FlutterMap(
+        
         options: MapOptions(
           initialCenter: LatLng(initialCenter[0], initialCenter[1]),
           initialZoom: zoomLevel,

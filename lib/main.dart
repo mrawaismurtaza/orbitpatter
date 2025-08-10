@@ -4,9 +4,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:get_it/get_it.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:orbitpatter/core/routes/app_router.dart';
+import 'package:orbitpatter/core/services/hive_service.dart';
 import 'package:orbitpatter/core/services/location_service.dart';
 import 'package:orbitpatter/core/theme/app_theme.dart';
+import 'package:orbitpatter/data/models/location.dart';
 import 'package:orbitpatter/data/repositories/auth_repository.dart';
 import 'package:orbitpatter/features/blocs/auth/login_bloc.dart';
 import 'package:orbitpatter/features/blocs/location/location_bloc.dart';
@@ -28,6 +31,10 @@ void main() async{
 
   await dotenv.load(fileName: "assets/.env");
 
+  await Hive.initFlutter();
+  Hive.registerAdapter(LocationModelAdapter());
+  await Hive.openBox<LocationModel>('location_box');
+
   _setupDependencies();
 
   runApp(
@@ -41,6 +48,7 @@ void main() async{
 void _setupDependencies() {
   getIt.registerSingleton<AuthRepository>(AuthRepository());
   getIt.registerSingleton<LocationService>(LocationService()); // Add this
+  getIt.registerSingleton<HiveService>(HiveService());
 
 
   // Register other dependencies as needed

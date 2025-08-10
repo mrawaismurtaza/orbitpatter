@@ -1,5 +1,6 @@
 import 'package:location/location.dart' as loc;
 import 'package:geocoding/geocoding.dart';
+import 'package:orbitpatter/data/models/location.dart';
 
 class LocationService {
 
@@ -30,7 +31,7 @@ class LocationService {
     return true;
   }
 
-  Future<String?> getCountryFromLocation() async {
+  Future<LocationModel?> getLocation() async {
     // Implementation for getting the current location
     final locData = await getCurrentLocation();
     if (locData == null) {
@@ -42,10 +43,14 @@ class LocationService {
     try {
       List<Placemark> placemarks = await placemarkFromCoordinates(latitude!, longitude!);
       if (placemarks.isNotEmpty) {
-        return placemarks.first.country;
+        return LocationModel(
+          country: placemarks.first.country!,
+          latitude: double.parse(latitude.toString()),
+          longitude: double.parse(longitude.toString()),
+        );
       }
     } catch (e) {
-      print("Error getting country from location: $e");
+      print("Error getting location: $e");
     }
   }
 

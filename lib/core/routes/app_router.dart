@@ -5,7 +5,7 @@ import 'package:orbitpatter/features/screens/login/login.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
-    initialLocation: FirebaseAuth.instance.currentUser != null ? '/' : '/login',
+    initialLocation: '/',
     routes: [
       // ShellRoute(routes: []),
       GoRoute(

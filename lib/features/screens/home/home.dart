@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:hive_flutter/hive_flutter.dart';
+import 'package:orbitpatter/core/services/hive_service.dart';
 import 'package:orbitpatter/core/utils/flushbar.dart';
+import 'package:orbitpatter/data/models/location.dart';
 import 'package:orbitpatter/features/blocs/location/location_bloc.dart';
 import 'package:orbitpatter/features/blocs/location/location_event.dart';
 import 'package:orbitpatter/features/blocs/location/location_state.dart';
 import 'package:orbitpatter/features/screens/home/widgets/flutter_map.dart';
+import 'package:orbitpatter/main.dart';
+import 'package:redacted/redacted.dart';
 
 class Home extends StatefulWidget {
   final Object? extra;
@@ -15,7 +20,6 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-
   @override
   void initState() {
     super.initState();
@@ -39,9 +43,13 @@ class _HomeState extends State<Home> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Padding(
-        padding: const EdgeInsets.only(top: 40.0, bottom: 20.0, left: 20.0, right: 20.0),
+        padding: const EdgeInsets.only(
+          top: 40.0,
+          bottom: 20.0,
+          left: 20.0,
+          right: 20.0,
+        ),
         child: Flex(
-        
           direction: Axis.vertical,
           children: [
             Expanded(
@@ -49,36 +57,72 @@ class _HomeState extends State<Home> {
               child: BlocBuilder<LocationBloc, LocationState>(
                 builder: (context, state) {
                   if (state is LocationLoading) {
-                    return const Center(
-                      child: CircularProgressIndicator(),
+                    return Center(
+                      child: SizedBox(
+                        width: double.infinity,
+                        height: 200,
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: Colors.grey[300],
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: const SizedBox.expand().redacted(
+                            context: context,
+                            redact: true,
+                          ),
+                        ),
+                      ),
                     );
                   } else if (state is LocationLoaded) {
-                    final loc = state.location as Map<String, double>;
+                    getIt<HiveService>().cacheLocation(state.location);
+                    final loc = state.location;
                     return CustomMap(
                       markerCoordinates: [
-                        [loc['latitude']!, loc['longitude']!],
+                        [loc.latitude, loc.longitude],
                       ],
                       zoomLevel: 12.0,
-                      initialCenter: [loc['latitude']!, loc['longitude']!],
+                      initialCenter: [loc.latitude, loc.longitude],
                     );
                   } else if (state is LocationError) {
-                    return Center(
-                      child: Text('Error: ${state.message}'),
+                    return FutureBuilder(
+                      future: getIt<HiveService>().getCachedLocation(),
+                      builder: (contxt, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const Center(
+                            child: CircularProgressIndicator(),
+                          );
+                        } else if (snapshot.hasData && snapshot.data != null) {
+                          final cachedLocation = snapshot.data!;
+                          return CustomMap(
+                            markerCoordinates: [
+                              [
+                                cachedLocation.latitude,
+                                cachedLocation.longitude,
+                              ],
+                            ],
+                            zoomLevel: 12.0,
+                            initialCenter: [
+                              cachedLocation.latitude,
+                              cachedLocation.longitude,
+                            ],
+                          );
+                        } else {
+                          return const Center(
+                            child: Text('No cached location available'),
+                          );
+                        }
+                      },
                     );
                   }
                   return const Center(
                     child: Text('Press the button to fetch location'),
                   );
-                }
+                },
               ),
             ),
             Spacer(),
-            Expanded(
-              flex: 3,
-              child: Container(
-                color: Colors.blue,
-              ),
-            ),
+            Expanded(flex: 3, child: Container(color: Colors.blue)),
           ],
         ),
       ),

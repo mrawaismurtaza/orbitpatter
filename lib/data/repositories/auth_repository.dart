@@ -57,6 +57,12 @@ class AuthRepository {
     }
   }
 
+  Future<bool> isSignedIn() async {
+    final user = FirebaseAuth.instance.currentUser;
+    return user != null;
+  }
+
+
   Future<void> signOut() {
     return Future.wait([
       FirebaseAuth.instance.signOut(),

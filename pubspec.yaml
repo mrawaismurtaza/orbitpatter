@@ -53,6 +53,7 @@ dependencies:
   geocoding: ^4.0.0
   hive: ^2.2.3
   hive_flutter: ^1.1.0
+  redacted: ^1.0.13
 
 dev_dependencies:
   flutter_test:
