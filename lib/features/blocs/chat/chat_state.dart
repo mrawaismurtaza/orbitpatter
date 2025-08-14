@@ -13,9 +13,7 @@ class UsersLoading extends ChatState {}
 class UsersLoaded extends ChatState {
   final List<UserModel> users;
 
-  final UserModel currentUser;
-
-  UsersLoaded(this.users, this.currentUser);
+  UsersLoaded(this.users);
 }
 
 class UsersError extends ChatState {

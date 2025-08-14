@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -20,19 +21,20 @@ class _UsersListState extends State<UsersList> {
   void initState() {
     super.initState();
     context.read<ChatBloc>().add(FetchUsersEvent([]));
-    context.read<LoginBloc>().add(FetchCurrentUserEvent());
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Theme.of(context).primaryColor,
+
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: Icon(Icons.arrow_back,color: Theme.of(context).colorScheme.onPrimary,),
           onPressed: () => context.pop(),
         ),
-        title: const Text('Users'),
+        title: Text('Users', style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),),
       ),
       body: BlocBuilder<ChatBloc, ChatState>(
         builder: (context, state) {
@@ -41,24 +43,28 @@ class _UsersListState extends State<UsersList> {
               padding: const EdgeInsets.all(10),
               itemCount: 6, // Number of shimmer placeholders
               itemBuilder: (context, index) {
-                return ListTile(
-                  tileColor: Theme.of(context).primaryColor,
-                  title: Container(height: 16, color: Colors.white),
-                  trailing: Container(
-                    width: 24,
-                    height: 24,
-                    color: Colors.white,
+                return Container(
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primary,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: ListTile(
+                    title: Container(height: 16, width: 10, color: Colors.white),
+                    leading: Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: Colors.white,
+                      ),
+                      width: 30,
+                      height: 30,
+                    ),
                   ),
                 );
               },
-              separatorBuilder: (context, index) => const Divider(),
+              separatorBuilder: (context, index) => const SizedBox(height: 8),
             ).redacted(context: context, redact: true);
           } else if (state is UsersLoaded) {
-            final users = state.users
-                .where(
-                  (u) => u.uid != state.currentUser.uid,
-                ) // exclude current user
-                .toList();
+            final users = state.users;
 
             if (users.isEmpty) {
               return const Center(child: Text('No other users found'));
@@ -69,29 +75,41 @@ class _UsersListState extends State<UsersList> {
               itemCount: users.length,
               itemBuilder: (context, index) {
                 final user = users[index];
-                return ListTile(
-                  tileColor: Theme.of(context).primaryColor,
-                  title: Text(
-                    user.name,
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onPrimary,
-                    ),
+                return Container(
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primary,
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  trailing: IconButton(
-                    icon: Icon(
+                  child: ListTile(
+                    leading: CircleAvatar(
+                      backgroundImage: user.photoUrl != null
+                          ? CachedNetworkImageProvider(user.photoUrl!)
+                          : null,
+                      child: user.photoUrl == null
+                          ? const Icon(
+                              Icons.person,
+                              color: Colors.white,
+                              size: 20,
+                            )
+                          : null,
+                    ),
+                    title: Text(
+                      user.name,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onPrimary,
+                      ),
+                    ),
+                    trailing: Icon(
                       Icons.arrow_forward_ios,
                       color: Theme.of(context).colorScheme.onPrimary,
                     ),
-                    onPressed: () {
-                      // Handle message icon tap
+                    onTap: () {
+                      // Handle user tap
                     },
                   ),
-                  onTap: () {
-                    // Handle user tap
-                  },
                 );
               },
-              separatorBuilder: (context, index) => const Divider(),
+              separatorBuilder: (context, index) => const SizedBox(height: 8),
             );
           } else if (state is UsersError) {
             return Center(child: Text('Error: ${state.error}'));

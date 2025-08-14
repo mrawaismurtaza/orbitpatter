@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 import 'package:orbitpatter/core/services/hive_service.dart';
 import 'package:orbitpatter/core/utils/flushbar.dart';
 import 'package:orbitpatter/data/repositories/open_trip_map_repo.dart';

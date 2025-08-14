@@ -11,7 +11,7 @@ class ChatRepository {
   final FirebaseFirestore _firebaseFirestore = FirebaseFirestore.instance;
 
   Future<List<UserModel>> getUsers() async {
-    final snapshot = await _firebaseFirestore.collection('users').get();
+    final snapshot = await _firebaseFirestore.collection('users').where('uid', isNotEqualTo: _firebaseAuth.currentUser?.uid).get();
     final users = snapshot.docs.map((doc) {
       return UserModel.fromMap(doc.data());
     }).toList();

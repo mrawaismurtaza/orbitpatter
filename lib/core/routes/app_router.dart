@@ -3,7 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:orbitpatter/features/blocs/chat/chat_bloc.dart';
-import 'package:orbitpatter/features/screens/chat/chat.dart';
+import 'package:orbitpatter/features/screens/chat/chats.dart';
+import 'package:orbitpatter/features/screens/chat/chat_page.dart';
 import 'package:orbitpatter/features/screens/home/home.dart';
 import 'package:orbitpatter/features/screens/login/login.dart';
 import 'package:orbitpatter/features/screens/profile/profile.dart';
@@ -17,14 +18,18 @@ class AppRouter {
     routes: [
       ShellRoute(
         builder: (context, state, child) {
+          int currentIndex =
+              (state.extra is Map &&
+                  (state.extra as Map).containsKey('currentIndex'))
+              ? (state.extra as Map)['currentIndex'] as int
+              : 0;
           return Scaffold(
-            body: child,
+            body: IndexedStack(
+              index: currentIndex,
+              children: const [Home(), Search(), Chats(), Profile()],
+            ),
             bottomNavigationBar: CustomNavBar(
-              currentIndex:
-                  (state.extra is Map &&
-                      (state.extra as Map).containsKey('currentIndex'))
-                  ? (state.extra as Map)['currentIndex'] as int
-                  : 0,
+              currentIndex: currentIndex,
               onTap: (index) {
                 // Handle navigation based on index
                 switch (index) {
@@ -48,33 +53,76 @@ class AppRouter {
         routes: [
           GoRoute(
             path: '/',
-            builder: (context, state) => Home(extra: state.extra),
+            builder: (context, state) => Home(),
           ),
           GoRoute(
             path: '/search',
-            builder: (context, state) => Search(extra: state.extra),
+            builder: (context, state) => Search(),
           ),
           GoRoute(
             path: '/chat',
-            builder: (context, state) => Chat(extra: state.extra),
+            builder: (context, state) => Chats(),
           ),
           GoRoute(
             path: '/profile',
-            builder: (context, state) => Profile(extra: state.extra),
+            builder: (context, state) => Profile(),
           ),
         ],
       ),
       GoRoute(
         path: '/login',
-        builder: (context, state) => Login(extra: state.extra),
+        builder: (context, state) => Login(),
       ),
       GoRoute(
         path: '/users',
-        builder: (context, state) => BlocProvider<ChatBloc>(
-          create: (_) => GetIt.instance<ChatBloc>(),
-          child: const UsersList(),
-        ),
+        pageBuilder: (context, state) {
+          return _buildPage(context, const UsersList());
+        },
+      ),
+
+      GoRoute(
+        path: '/chats',
+        pageBuilder: (context, state) {
+          return _buildPage(context, const Chats());
+        },
       ),
     ],
   );
+
+  static Page<dynamic> _buildPage(BuildContext context, Widget child) {
+    return CustomTransitionPage(
+      key: ValueKey(child.runtimeType.toString()),
+      child: child,
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        return FadeTransition(
+          opacity: CurveTween(curve: Curves.easeInOut).animate(animation),
+          child: child,
+        );
+      },
+      transitionDuration: const Duration(milliseconds: 200),
+    );
+  }
+}
+
+class CustomTransitionPage<T> extends Page<T> {
+  final Widget child;
+  final RouteTransitionsBuilder transitionsBuilder;
+  final Duration transitionDuration;
+
+  const CustomTransitionPage({
+    required this.child,
+    required this.transitionsBuilder,
+    this.transitionDuration = const Duration(milliseconds: 300),
+    super.key,
+  });
+
+  @override
+  Route<T> createRoute(BuildContext context) {
+    return PageRouteBuilder<T>(
+      settings: this,
+      pageBuilder: (context, animation, _) => child,
+      transitionsBuilder: transitionsBuilder,
+      transitionDuration: transitionDuration,
+    );
+  }
 }

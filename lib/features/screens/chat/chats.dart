@@ -5,15 +5,15 @@ import 'package:orbitpatter/features/blocs/chat/chat_bloc.dart';
 import 'package:orbitpatter/features/blocs/chat/chat_event.dart';
 import 'package:orbitpatter/features/blocs/chat/chat_state.dart';
 
-class Chat extends StatefulWidget {
+class Chats extends StatefulWidget {
   final Object? extra;
-  const Chat({super.key, this.extra});
+  const Chats({super.key, this.extra});
 
   @override
-  State<Chat> createState() => _ChatState();
+  State<Chats> createState() => _ChatsState();
 }
 
-class _ChatState extends State<Chat> {
+class _ChatsState extends State<Chats> {
 
   @override
   void initState() {
@@ -28,7 +28,8 @@ class _ChatState extends State<Chat> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Chat'),
+        centerTitle: true,
+        title: const Text('Chats'),
       ),
       body: BlocBuilder<ChatBloc, ChatState>(
         builder: (context, state) {

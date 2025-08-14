@@ -4,7 +4,7 @@ class UserModel {
   final String uid;
   final String name;
   final String email;
-  final String photoUrl;
+  final String? photoUrl;
   final String? bio;
   final DateTime createdAt;
 

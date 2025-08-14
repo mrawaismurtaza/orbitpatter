@@ -23,8 +23,7 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     emit(UsersLoading()); // Corrected to emit UsersLoading state
     try {
       final users = await _chatRepository.getUsers();
-      final currentUser = await _authRepository.getCurrentUser();
-      emit(UsersLoaded(users, currentUser));
+      emit(UsersLoaded(users));
     } catch (e) {
       emit(UsersError(e.toString())); // Corrected error state
     }
