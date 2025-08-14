@@ -26,3 +26,10 @@ class CurrentUserFetched extends LoginState {
 
   CurrentUserFetched(this.user);
 }
+
+//Get user by id
+class UserFetchedById extends LoginState {
+  final UserModel? user;
+
+  UserFetchedById(this.user);
+}

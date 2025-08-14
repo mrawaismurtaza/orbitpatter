@@ -11,6 +11,7 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
     on<LoginWithGoogleEvent>(_onLoginWithGoogle);
     on<ResetLoginEvent>(_onResetLogin);
     on<FetchCurrentUserEvent>(_onFetchCurrentUser);
+    on<FetchUserByIdEvent>(_onFetchUserById);
   }
 
   Future<void> _onLoginWithGoogle(LoginWithGoogleEvent event, Emitter<LoginState> emit) async {
@@ -36,6 +37,15 @@ class LoginBloc extends Bloc<LoginEvent, LoginState> {
     try {
       final user = await authRepository.getCurrentUser();
       emit(CurrentUserFetched(user));
+    } catch (e) {
+      emit(GoogleLoginFailure(e.toString()));
+    }
+  }
+
+  Future<void> _onFetchUserById(FetchUserByIdEvent event, Emitter<LoginState> emit) async {
+    try {
+      final user = await authRepository.getUserById(event.uid);
+      emit(UserFetchedById(user));
     } catch (e) {
       emit(GoogleLoginFailure(e.toString()));
     }

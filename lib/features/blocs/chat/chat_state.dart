@@ -5,22 +5,6 @@ import 'package:orbitpatter/data/models/user.dart';
 abstract class ChatState {}
 
 
-//Users
-class UsersInitial extends ChatState {}
-
-class UsersLoading extends ChatState {}
-
-class UsersLoaded extends ChatState {
-  final List<UserModel> users;
-
-  UsersLoaded(this.users);
-}
-
-class UsersError extends ChatState {
-  final String error;
-
-  UsersError(this.error);
-}
 
 
 //Chats
@@ -40,20 +24,6 @@ class ChatsError extends ChatState {
   ChatsError(this.error);
 }
 
-// Chat
-class MessagesInitial extends ChatState {}
 
-class MessagesLoading extends ChatState {}
 
-class MessagesLoaded extends ChatState {
-  final List<MessageModel> messages;
-
-  MessagesLoaded(this.messages);
-}
-
-class MessagesError extends ChatState {
-  final String error;
-
-  MessagesError(this.error);
-}
 

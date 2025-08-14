@@ -1,39 +1,30 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:orbitpatter/data/models/message.dart';
 
 class ChatModel {
   final String id;
   final List<String> participants;
-  final String message;
   final DateTime createdAt;
   final String lastMessage;
-  final DateTime lastMessageTimestamp;
-  final List<MessageModel> messages;
   final String receiverName;
+  final String receiverId;
 
   ChatModel({
     required this.id,
     required this.participants,
-    required this.message,
     required this.createdAt,
     required this.lastMessage,
-    required this.lastMessageTimestamp,
-    required this.messages,
     required this.receiverName,
+    required this.receiverId,
   });
 
-  factory ChatModel.fromMap(Map<String, dynamic> data) {
+  factory ChatModel.fromMap(Map<String, dynamic> data, String docId) {
     return ChatModel(
-      id: data['id'] ?? '',
+      id: docId,
       participants: List<String>.from(data['participants'] ?? []),
-      message: data['message'] ?? '',
       createdAt: (data['createdAt'] as Timestamp).toDate(),
       lastMessage: data['lastMessage'] ?? '',
-      lastMessageTimestamp: (data['lastMessageTimestamp'] as Timestamp).toDate(),
-      messages: (data['messages'] as List)
-          .map((msg) => MessageModel.fromMap(msg))
-          .toList(),
       receiverName: data['receiverName'] ?? '',
+      receiverId: data['receiverId'],
     );
   }
 
@@ -41,12 +32,10 @@ class ChatModel {
     return {
       'id': id,
       'participants': participants,
-      'message': message,
       'createdAt': Timestamp.fromDate(createdAt),
       'lastMessage': lastMessage,
-      'lastMessageTimestamp': Timestamp.fromDate(lastMessageTimestamp),
-      'messages': messages.map((msg) => msg.toMap()).toList(),
       'receiverName': receiverName,
+      'receiverId': receiverId,
     };
   }
 }

@@ -1,8 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:orbitpatter/data/models/chat.dart';
-import 'package:orbitpatter/data/models/message.dart';
-import 'package:orbitpatter/data/models/user.dart';
 
 class ChatRepository {
 
@@ -10,36 +8,33 @@ class ChatRepository {
 
   final FirebaseFirestore _firebaseFirestore = FirebaseFirestore.instance;
 
-  Future<List<UserModel>> getUsers() async {
-    final snapshot = await _firebaseFirestore.collection('users').where('uid', isNotEqualTo: _firebaseAuth.currentUser?.uid).get();
-    final users = snapshot.docs.map((doc) {
-      return UserModel.fromMap(doc.data());
-    }).toList();
-    return users;
-  }
 
   Stream<List<ChatModel>> getChats() {
-    return _firebaseFirestore.collection('chats').snapshots().map((snapshot) {
-      return snapshot.docs.map((doc) {
-        return ChatModel.fromMap(doc.data());
-      }).toList();
+  final uid = _firebaseAuth.currentUser?.uid;
+  return _firebaseFirestore
+    .collection('chats')
+    .where('participants', arrayContains: uid)
+    .snapshots()
+    .map((snapshot) => snapshot.docs.map((doc) => ChatModel.fromMap(doc.data(), doc.id)).toList());
+}
+
+
+  Future<void> createChatIfNotExists(String chatId, List<String> participants, String receiverName, String receiverId) async {
+  final chatDoc = _firebaseFirestore.collection('chats').doc(chatId);
+  final chatSnapshot = await chatDoc.get();
+
+  if (!chatSnapshot.exists) {
+    await chatDoc.set({
+      'participants': participants,
+      'lastMessage': '',
+      'receiverName': receiverName,
+      'createdAt': FieldValue.serverTimestamp(),
+      'receiverId': receiverId,
+      // 'receiverId': participants.firstWhere((id) => id != _firebaseAuth.currentUser?.uid),
     });
   }
+}
 
 
-  Stream<List<MessageModel>> getMessages(String chatId) {
-    return _firebaseFirestore
-        .collection('chats')
-        .doc(chatId)
-        .collection('messages')
-        .orderBy('createdAt', descending: true)
-        .snapshots()
-        .map((snapshot) {
-      return snapshot.docs.map((doc) {
-        return MessageModel.fromMap(doc.data());
-      }).toList();
-    });
-  }
-
-
+ 
 }

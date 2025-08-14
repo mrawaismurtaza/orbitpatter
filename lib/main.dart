@@ -13,10 +13,13 @@ import 'package:orbitpatter/core/utils/logger.dart';
 import 'package:orbitpatter/data/models/location.dart';
 import 'package:orbitpatter/data/repositories/auth_repository.dart';
 import 'package:orbitpatter/data/repositories/chat_repository.dart';
+import 'package:orbitpatter/data/repositories/message_repository.dart';
 import 'package:orbitpatter/data/repositories/open_trip_map_repo.dart';
 import 'package:orbitpatter/features/blocs/auth/login_bloc.dart';
 import 'package:orbitpatter/features/blocs/chat/chat_bloc.dart';
 import 'package:orbitpatter/features/blocs/location/location_bloc.dart';
+import 'package:orbitpatter/features/blocs/message/message_bloc.dart';
+import 'package:orbitpatter/features/blocs/user/user_bloc.dart';
 import 'package:orbitpatter/firebase_options.dart';
 
 final getIt = GetIt.instance;
@@ -57,6 +60,7 @@ void _setupDependencies() {
   getIt.registerSingleton<HiveService>(HiveService());
   getIt.registerSingleton<OpenTripMapRepo>(OpenTripMapRepo());
   getIt.registerSingleton<ChatRepository>(ChatRepository());
+  getIt.registerSingleton<MessageRepository>(MessageRepository());
 
 
   // Register other dependencies as needed
@@ -65,6 +69,8 @@ void _setupDependencies() {
   ));
   getIt.registerFactory<LocationBloc>(() => LocationBloc(getIt<LocationService>()));
   getIt.registerFactory<ChatBloc>(() => ChatBloc(getIt<ChatRepository>(), getIt<AuthRepository>()));
+  getIt.registerFactory<UsersBloc>(() => UsersBloc(getIt<AuthRepository>()));
+  getIt.registerFactory<MessageBloc>(() => MessageBloc(getIt<MessageRepository>(), getIt<ChatRepository>()));
 }
 
 class MyApp extends StatelessWidget {
@@ -86,6 +92,9 @@ class MyApp extends StatelessWidget {
         RepositoryProvider(
           create: (context) => ChatRepository(),
         ),
+        RepositoryProvider(
+          create: (context) => MessageRepository(),
+        ),
       ],
       child: MultiBlocProvider(
         providers: [
@@ -96,6 +105,10 @@ class MyApp extends StatelessWidget {
           BlocProvider<ChatBloc>(
             create: (_) => getIt<ChatBloc>(),
           ),
+          BlocProvider(create: (_) => getIt<UsersBloc>()),
+          BlocProvider<MessageBloc>(
+  create: (_) => MessageBloc(getIt<MessageRepository>(), getIt<ChatRepository>()),
+),
         ],
         child:  MaterialApp.router(
           debugShowCheckedModeBanner: false,

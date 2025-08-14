@@ -114,3 +114,13 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+
+icons_launcher:
+  
+  image_path: "assets/images/orbit_patter_logo.png"
+  platforms:
+    android:
+      enable: true
+    ios:
+      enable: true

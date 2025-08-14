@@ -1,7 +1,9 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
+import 'package:orbitpatter/data/models/user.dart';
 import 'package:orbitpatter/features/blocs/chat/chat_bloc.dart';
 import 'package:orbitpatter/features/screens/chat/chats.dart';
 import 'package:orbitpatter/features/screens/chat/chat_page.dart';
@@ -14,7 +16,7 @@ import 'package:orbitpatter/features/shared_widgets/navbar.dart';
 
 class AppRouter {
   static final GoRouter router = GoRouter(
-    initialLocation: '/',
+    initialLocation: FirebaseAuth.instance.currentUser != null ? '/' : '/login',
     routes: [
       ShellRoute(
         builder: (context, state, child) {
@@ -40,7 +42,7 @@ class AppRouter {
                     context.go('/search', extra: {'currentIndex': 1});
                     break;
                   case 2:
-                    context.go('/chat', extra: {'currentIndex': 2});
+                    context.go('/chats', extra: {'currentIndex': 2});
                     break;
                   case 3:
                     context.go('/profile', extra: {'currentIndex': 3});
@@ -60,7 +62,7 @@ class AppRouter {
             builder: (context, state) => Search(),
           ),
           GoRoute(
-            path: '/chat',
+            path: '/chats',
             builder: (context, state) => Chats(),
           ),
           GoRoute(
@@ -81,9 +83,10 @@ class AppRouter {
       ),
 
       GoRoute(
-        path: '/chats',
+        path: '/chatpage',
         pageBuilder: (context, state) {
-          return _buildPage(context, const Chats());
+          final user = state.extra as UserModel;
+          return _buildPage(context, ChatPage(user: user));
         },
       ),
     ],

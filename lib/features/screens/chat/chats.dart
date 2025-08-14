@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:orbitpatter/core/utils/logger.dart';
+import 'package:orbitpatter/features/blocs/auth/login_bloc.dart';
+import 'package:orbitpatter/features/blocs/auth/login_event.dart';
+import 'package:orbitpatter/features/blocs/auth/login_state.dart';
 import 'package:orbitpatter/features/blocs/chat/chat_bloc.dart';
 import 'package:orbitpatter/features/blocs/chat/chat_event.dart';
 import 'package:orbitpatter/features/blocs/chat/chat_state.dart';
@@ -14,36 +18,51 @@ class Chats extends StatefulWidget {
 }
 
 class _ChatsState extends State<Chats> {
-
   @override
   void initState() {
     super.initState();
-    context.read<ChatBloc>().add(FetchUsersEvent([])); // Pass an empty list as the required argument
     context.read<ChatBloc>().add(FetchChatsEvent([]));
-
   }
-
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        centerTitle: true,
-        title: const Text('Chats'),
-      ),
+      appBar: AppBar(centerTitle: true, title: const Text('Chats')),
       body: BlocBuilder<ChatBloc, ChatState>(
         builder: (context, state) {
           if (state is ChatsLoading) {
             return const Center(child: CircularProgressIndicator());
           } else if (state is ChatsLoaded) {
-            return ListView.builder(
+            return ListView.separated(
+              padding: const EdgeInsets.all(12),
               itemCount: state.chats.length,
               itemBuilder: (context, index) {
                 final chat = state.chats[index];
-                return ListTile(
-                  title: Text(chat.receiverName),
-                  subtitle: Text(chat.lastMessage),
+                return Container(
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.primary,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: ListTile(
+                    onTap: () {
+                      LoggerUtil.info('Receiver Id is ${chat.receiverId}');
+                      context.read<LoginBloc>().add(FetchUserByIdEvent(chat.receiverId));
+
+                      final state = context.read<LoginBloc>().state;
+                      if (state is UserFetchedById) {
+                        context.push(
+                          '/chatpage',
+                          extra: state.user,
+                        );
+                      }
+                    },
+                    title: Text(chat.receiverName),
+                    subtitle: Text(chat.lastMessage),
+                  ),
                 );
+              },
+              separatorBuilder: (context, index) {
+                return const SizedBox(height: 8);
               },
             );
           } else {

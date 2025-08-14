@@ -2,11 +2,11 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:orbitpatter/features/blocs/auth/login_bloc.dart';
-import 'package:orbitpatter/features/blocs/auth/login_event.dart';
 import 'package:orbitpatter/features/blocs/chat/chat_bloc.dart';
-import 'package:orbitpatter/features/blocs/chat/chat_event.dart';
 import 'package:orbitpatter/features/blocs/chat/chat_state.dart';
+import 'package:orbitpatter/features/blocs/user/user_bloc.dart';
+import 'package:orbitpatter/features/blocs/user/user_event.dart';
+import 'package:orbitpatter/features/blocs/user/user_state.dart';
 import 'package:redacted/redacted.dart';
 
 class UsersList extends StatefulWidget {
@@ -20,8 +20,15 @@ class _UsersListState extends State<UsersList> {
   @override
   void initState() {
     super.initState();
-    context.read<ChatBloc>().add(FetchUsersEvent([]));
+    context.read<UsersBloc>().add(FetchUsersEvent());
   }
+
+  // @override
+  // void didChangeDependencies() {
+  //   // TODO: implement didChangeDependencies
+  //   super.didChangeDependencies();
+  //   context.read<ChatBloc>().add(FetchUsersEvent([]));
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -36,7 +43,7 @@ class _UsersListState extends State<UsersList> {
         ),
         title: Text('Users', style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),),
       ),
-      body: BlocBuilder<ChatBloc, ChatState>(
+      body: BlocBuilder<UsersBloc, UsersState>(
         builder: (context, state) {
           if (state is UsersLoading) {
             return ListView.separated(
@@ -104,7 +111,7 @@ class _UsersListState extends State<UsersList> {
                       color: Theme.of(context).colorScheme.onPrimary,
                     ),
                     onTap: () {
-                      // Handle user tap
+                      context.push('/chatpage', extra: user);
                     },
                   ),
                 );

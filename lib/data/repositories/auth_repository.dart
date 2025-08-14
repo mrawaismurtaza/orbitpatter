@@ -8,7 +8,6 @@ import 'package:orbitpatter/core/utils/logger.dart';
 import 'package:orbitpatter/data/models/user.dart';
 
 class AuthRepository {
-
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   final FirebaseFirestore _firebaseFirestore = FirebaseFirestore.instance;
 
@@ -27,7 +26,7 @@ class AuthRepository {
 
       final GoogleSignInAuthentication googleAuth =
           await googleUser.authentication;
-      
+
       final credential = GoogleAuthProvider.credential(
         idToken: googleAuth.idToken,
       );
@@ -37,27 +36,30 @@ class AuthRepository {
       );
       final firebaseUser = UserCredential.user;
 
-
       if (firebaseUser == null) {
         throw Exception('Failed to sign in with Google');
       }
 
-      
-
-      final userDoc = await _firebaseFirestore.collection('users').doc(firebaseUser.uid).get();
+      final userDoc = await _firebaseFirestore
+          .collection('users')
+          .doc(firebaseUser.uid)
+          .get();
       Map<String, dynamic> userMap;
 
       //Store user to Users collection
       if (!userDoc.exists) {
         userMap = {
-        'uid': firebaseUser.uid,
-        'name': firebaseUser.displayName ?? '',
-        'email': firebaseUser.email ?? '',
-        'photoUrl': firebaseUser.photoURL ?? '',
-        'bio': null,
-        'createdAt': Timestamp.now(),
-      };
-        await _firebaseFirestore.collection('users').doc(firebaseUser.uid).set(userMap);
+          'uid': firebaseUser.uid,
+          'name': firebaseUser.displayName ?? '',
+          'email': firebaseUser.email ?? '',
+          'photoUrl': firebaseUser.photoURL ?? '',
+          'bio': null,
+          'createdAt': Timestamp.now(),
+        };
+        await _firebaseFirestore
+            .collection('users')
+            .doc(firebaseUser.uid)
+            .set(userMap);
       } else {
         userMap = {
           ...userDoc.data()!,
@@ -65,11 +67,14 @@ class AuthRepository {
           'email': firebaseUser.email ?? '',
           'photoUrl': firebaseUser.photoURL ?? '',
         };
-        await _firebaseFirestore.collection('users').doc(firebaseUser.uid).update({
-          'name': firebaseUser.displayName ?? '',
-          'email': firebaseUser.email ?? '',
-          'photoUrl': firebaseUser.photoURL ?? '',
-        });
+        await _firebaseFirestore
+            .collection('users')
+            .doc(firebaseUser.uid)
+            .update({
+              'name': firebaseUser.displayName ?? '',
+              'email': firebaseUser.email ?? '',
+              'photoUrl': firebaseUser.photoURL ?? '',
+            });
       }
 
       return UserModel.fromMap(userMap);
@@ -88,7 +93,6 @@ class AuthRepository {
     return user != null;
   }
 
-
   Future<void> signOut() {
     return Future.wait([
       FirebaseAuth.instance.signOut(),
@@ -100,13 +104,47 @@ class AuthRepository {
     final user = _firebaseAuth.currentUser;
 
     try {
-      final userDoc = await _firebaseFirestore.collection('users').doc(user!.uid).get();
+      final userDoc = await _firebaseFirestore
+          .collection('users')
+          .doc(user!.uid)
+          .get();
       LoggerUtil.info('Current user fetched: ${userDoc.data()}');
       return UserModel.fromMap(userDoc.data()!);
     } catch (e) {
       LoggerUtil.error('Failed to get current user: $e');
       rethrow;
     }
+  }
+
+  Future<List<UserModel>> getUsers() async {
+    final snapshot = await _firebaseFirestore
+        .collection('users')
+        .where('uid', isNotEqualTo: _firebaseAuth.currentUser?.uid)
+        .get();
+    final users = snapshot.docs.map((doc) {
+      return UserModel.fromMap(doc.data());
+    }).toList();
+    return users;
+  }
+
+  Future<UserModel> getUserById(String uid) async {
+    try {
+      final userDoc = await _firebaseFirestore
+        .collection('users')
+        .doc(uid)
+        .get();
+
+      if (!userDoc.exists) {
+      throw Exception('User with ID $uid does not exist');
+    }
+      
+      LoggerUtil.info('User fetched by ID ${userDoc.data()}');
+      return UserModel.fromMap(userDoc.data()!);
+    } catch (e) {
+      LoggerUtil.error('Failed to fecth user by ID: $e');
+      rethrow;
+    }
+  
   }
 
 }

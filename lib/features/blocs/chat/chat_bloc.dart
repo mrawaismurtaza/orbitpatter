@@ -10,24 +10,10 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   final ChatRepository _chatRepository;
   final AuthRepository _authRepository;
 
-  ChatBloc(this._chatRepository, this._authRepository) : super(UsersInitial()) {
-    on<FetchUsersEvent>(_fetchUsers);
+  ChatBloc(this._chatRepository, this._authRepository) : super(ChatsInitial()) {
     on<FetchChatsEvent>(_fetchChats);
-    on<FetchMessagesEvent>(_fetchMessages);
   }
 
-  Future<void> _fetchUsers(
-    FetchUsersEvent event,
-    Emitter<ChatState> emit,
-  ) async {
-    emit(UsersLoading()); // Corrected to emit UsersLoading state
-    try {
-      final users = await _chatRepository.getUsers();
-      emit(UsersLoaded(users));
-    } catch (e) {
-      emit(UsersError(e.toString())); // Corrected error state
-    }
-  }
 
   Future<void> _fetchChats(
     FetchChatsEvent event,
@@ -45,20 +31,5 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     }
   }
 
-  Future<void> _fetchMessages(
-    FetchMessagesEvent event,
-    Emitter<ChatState> emit,
-  ) async {
-    emit(MessagesInitial());
-    try {
-      await emit.forEach<List<MessageModel>>(
-        _chatRepository.getMessages(event.chatId), // Stream from Firestore
-        onData: (messages) => MessagesLoaded(messages), // State on each snapshot
-        onError: (error, stackTrace) => MessagesError(error.toString()),
-      );
-    } catch (e) {
-      emit(MessagesError(e.toString()));
-    }
-  }
-
+ 
 }

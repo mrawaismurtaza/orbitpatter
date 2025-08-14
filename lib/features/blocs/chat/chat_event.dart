@@ -4,13 +4,6 @@ import 'package:orbitpatter/data/models/user.dart';
 
 abstract class ChatEvent {}
 
-//Users
-class FetchUsersEvent extends ChatEvent {
-  final List<UserModel> users;
-
-  FetchUsersEvent(this.users);
-}
-
 
 
 //Chats
@@ -21,10 +14,4 @@ class FetchChatsEvent extends ChatEvent {
 }
 
 
-//Messages
-class FetchMessagesEvent extends ChatEvent {
-  final List<MessageModel> messages;
-  final String chatId;
 
-  FetchMessagesEvent(this.messages, this.chatId);
-}
