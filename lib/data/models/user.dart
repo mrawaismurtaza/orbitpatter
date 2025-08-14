@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class User {
+class UserModel {
   final String uid;
   final String name;
   final String email;
@@ -8,7 +8,7 @@ class User {
   final String? bio;
   final DateTime createdAt;
 
-  User({
+  UserModel({
     required this.uid,
     required this.name,
     required this.email,
@@ -17,9 +17,9 @@ class User {
     required this.createdAt,
   });
 
-  // Factory method to create a User from a Map
-  factory User.fromMap(Map<String, dynamic> data) {
-    return User(
+  // Factory method to create a UserModel from a Map
+  factory UserModel.fromMap(Map<String, dynamic> data) {
+    return UserModel(
       uid: data['uid'] ?? '',
       name: data['name'] ?? '',
       email: data['email'] ?? '',
@@ -29,7 +29,7 @@ class User {
     );
   }
 
-  // Method to convert a User to a Map
+  // Method to convert a UserModel to a Map
   Map<String, dynamic> toMap() {
     return {
       'uid': uid,

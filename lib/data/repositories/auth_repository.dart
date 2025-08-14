@@ -4,10 +4,15 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' hide User;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:orbitpatter/core/utils/logger.dart';
 import 'package:orbitpatter/data/models/user.dart';
 
 class AuthRepository {
-  Future<User> signInWithGoogle() async {
+
+  final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
+  final FirebaseFirestore _firebaseFirestore = FirebaseFirestore.instance;
+
+  Future<UserModel> signInWithGoogle() async {
     try {
       String? serverClientId = dotenv.env['serverClientId'];
 
@@ -27,7 +32,7 @@ class AuthRepository {
         idToken: googleAuth.idToken,
       );
 
-      final UserCredential = await FirebaseAuth.instance.signInWithCredential(
+      final UserCredential = await _firebaseAuth.signInWithCredential(
         credential,
       );
       final firebaseUser = UserCredential.user;
@@ -37,7 +42,14 @@ class AuthRepository {
         throw Exception('Failed to sign in with Google');
       }
 
-      final userMap = {
+      
+
+      final userDoc = await _firebaseFirestore.collection('users').doc(firebaseUser.uid).get();
+      Map<String, dynamic> userMap;
+
+      //Store user to Users collection
+      if (!userDoc.exists) {
+        userMap = {
         'uid': firebaseUser.uid,
         'name': firebaseUser.displayName ?? '',
         'email': firebaseUser.email ?? '',
@@ -45,8 +57,22 @@ class AuthRepository {
         'bio': null,
         'createdAt': Timestamp.now(),
       };
+        await _firebaseFirestore.collection('users').doc(firebaseUser.uid).set(userMap);
+      } else {
+        userMap = {
+          ...userDoc.data()!,
+          'name': firebaseUser.displayName ?? '',
+          'email': firebaseUser.email ?? '',
+          'photoUrl': firebaseUser.photoURL ?? '',
+        };
+        await _firebaseFirestore.collection('users').doc(firebaseUser.uid).update({
+          'name': firebaseUser.displayName ?? '',
+          'email': firebaseUser.email ?? '',
+          'photoUrl': firebaseUser.photoURL ?? '',
+        });
+      }
 
-      return User.fromMap(userMap);
+      return UserModel.fromMap(userMap);
     } on GoogleSignInException catch (e) {
       if (e.code == GoogleSignInExceptionCode.canceled) {
         throw Exception('Google Sign-In was canceled by the user');
@@ -69,4 +95,18 @@ class AuthRepository {
       GoogleSignIn.instance.signOut(),
     ]);
   }
+
+  Future<UserModel> getCurrentUser() async {
+    final user = _firebaseAuth.currentUser;
+
+    try {
+      final userDoc = await _firebaseFirestore.collection('users').doc(user!.uid).get();
+      LoggerUtil.info('Current user fetched: ${userDoc.data()}');
+      return UserModel.fromMap(userDoc.data()!);
+    } catch (e) {
+      LoggerUtil.error('Failed to get current user: $e');
+      rethrow;
+    }
+  }
+
 }

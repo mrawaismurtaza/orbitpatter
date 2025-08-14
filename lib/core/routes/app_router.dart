@@ -1,11 +1,14 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
+import 'package:orbitpatter/features/blocs/chat/chat_bloc.dart';
 import 'package:orbitpatter/features/screens/chat/chat.dart';
 import 'package:orbitpatter/features/screens/home/home.dart';
 import 'package:orbitpatter/features/screens/login/login.dart';
 import 'package:orbitpatter/features/screens/profile/profile.dart';
 import 'package:orbitpatter/features/screens/search/search.dart';
+import 'package:orbitpatter/features/screens/users_list.dart';
 import 'package:orbitpatter/features/shared_widgets/navbar.dart';
 
 class AppRouter {
@@ -64,6 +67,13 @@ class AppRouter {
       GoRoute(
         path: '/login',
         builder: (context, state) => Login(extra: state.extra),
+      ),
+      GoRoute(
+        path: '/users',
+        builder: (context, state) => BlocProvider<ChatBloc>(
+          create: (_) => GetIt.instance<ChatBloc>(),
+          child: const UsersList(),
+        ),
       ),
     ],
   );

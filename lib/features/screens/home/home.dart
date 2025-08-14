@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:orbitpatter/core/services/hive_service.dart';
 import 'package:orbitpatter/core/utils/flushbar.dart';
+import 'package:orbitpatter/data/repositories/open_trip_map_repo.dart';
 import 'package:orbitpatter/features/blocs/location/location_bloc.dart';
 import 'package:orbitpatter/features/blocs/location/location_event.dart';
 import 'package:orbitpatter/features/blocs/location/location_state.dart';
@@ -45,6 +46,8 @@ class _HomeState extends State<Home> {
         );
       }
     });
+
+    OpenTripMapRepo().fetchPlaces(73.0551, 33.6844, "shops");
 
     Future.delayed(const Duration(seconds: 2), () {
       if (!mounted) return;
