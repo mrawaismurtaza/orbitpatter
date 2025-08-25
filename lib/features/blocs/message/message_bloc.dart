@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:orbitpatter/core/utils/logger.dart';
 import 'package:orbitpatter/data/models/message.dart';
 import 'package:orbitpatter/data/repositories/chat_repository.dart';
 import 'package:orbitpatter/data/repositories/message_repository.dart';
@@ -21,7 +22,7 @@ class MessageBloc extends Bloc<MessageEvent, MessagesState> {
     FetchMessagesEvent event,
     Emitter<MessagesState> emit,
   ) async {
-    emit(MessagesInitial());
+    emit(MessagesLoading());
     try {
       await emit.forEach<List<MessageModel>>(
         _messageRepository.getMessages(event.chatId), // Stream from Firestore
@@ -37,12 +38,10 @@ class MessageBloc extends Bloc<MessageEvent, MessagesState> {
     SendMessageEvent event,
     Emitter<MessagesState> emit,
   ) async {
-    emit(MessageSending());
     try {
-      await _messageRepository.sendMessage(event.message, event.chatId);
-      emit(MessageSent(event.message));
+      await _messageRepository.sendMessage(event.message, event.chatId, receiverFcmToken: event.receiverFcmToken);
     } catch (e) {
-      emit(MessagesError(e.toString()));
+      LoggerUtil.error('Error sending message: $e');
     }
   }
 
@@ -50,18 +49,15 @@ class MessageBloc extends Bloc<MessageEvent, MessagesState> {
     SendMessageWithChatCheckEvent event,
     Emitter<MessagesState> emit,
   ) async {
-    emit(MessageSending());
     try {
       await _chatRepository.createChatIfNotExists(
         event.chatId,
         event.participants,
-        event.receiverId,
-        event.receiverName,
+        event.message.text,
       );
-      await _messageRepository.sendMessage(event.message, event.chatId);
-      emit(MessageSent(event.message));
+      await _messageRepository.sendMessage(event.message, event.chatId, receiverFcmToken: event.receiverFcmToken);
     } catch (e) {
-      emit(MessagesError(e.toString()));
+      LoggerUtil.error('Error sending message: $e');
     }
   }
 }

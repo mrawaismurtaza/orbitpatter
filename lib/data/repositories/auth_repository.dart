@@ -4,12 +4,17 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' hide User;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:orbitpatter/core/services/notification_service.dart';
 import 'package:orbitpatter/core/utils/logger.dart';
 import 'package:orbitpatter/data/models/user.dart';
 
 class AuthRepository {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   final FirebaseFirestore _firebaseFirestore = FirebaseFirestore.instance;
+  final NotificationService _notificationService;
+
+  // Add NotificationService to constructor
+  AuthRepository(this._notificationService);
 
   Future<UserModel> signInWithGoogle() async {
     try {
@@ -40,6 +45,9 @@ class AuthRepository {
         throw Exception('Failed to sign in with Google');
       }
 
+      // Get current device FCM token (may be null)
+      final String? currentFcmToken = await _notificationService.getToken();
+
       final userDoc = await _firebaseFirestore
           .collection('users')
           .doc(firebaseUser.uid)
@@ -55,6 +63,7 @@ class AuthRepository {
           'photoUrl': firebaseUser.photoURL ?? '',
           'bio': null,
           'createdAt': Timestamp.now(),
+          'fcmtTokens': currentFcmToken != null ? [currentFcmToken] : <String>[],
         };
         await _firebaseFirestore
             .collection('users')
@@ -67,6 +76,7 @@ class AuthRepository {
           'email': firebaseUser.email ?? '',
           'photoUrl': firebaseUser.photoURL ?? '',
         };
+        // Update user basic info
         await _firebaseFirestore
             .collection('users')
             .doc(firebaseUser.uid)
@@ -75,6 +85,22 @@ class AuthRepository {
               'email': firebaseUser.email ?? '',
               'photoUrl': firebaseUser.photoURL ?? '',
             });
+
+        // Add current FCM token to fcmtTokens if present and not already stored
+        if (currentFcmToken != null) {
+          final existingTokens =
+              List<String>.from((userDoc.data() ?? {})['fcmtTokens'] ?? []);
+          if (!existingTokens.contains(currentFcmToken)) {
+            existingTokens.add(currentFcmToken);
+            await _firebaseFirestore
+                .collection('users')
+                .doc(firebaseUser.uid)
+                .update({'fcmtTokens': existingTokens});
+            userMap['fcmtTokens'] = existingTokens;
+          } else {
+            userMap['fcmtTokens'] = existingTokens;
+          }
+        }
       }
 
       return UserModel.fromMap(userMap);

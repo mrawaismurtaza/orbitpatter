@@ -1,5 +1,7 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:device_preview/device_preview.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -8,6 +10,7 @@ import 'package:hive_flutter/hive_flutter.dart';
 import 'package:orbitpatter/core/routes/app_router.dart';
 import 'package:orbitpatter/core/services/hive_service.dart';
 import 'package:orbitpatter/core/services/location_service.dart';
+import 'package:orbitpatter/core/services/notification_service.dart';
 import 'package:orbitpatter/core/theme/app_theme.dart';
 import 'package:orbitpatter/core/utils/logger.dart';
 import 'package:orbitpatter/data/models/location.dart';
@@ -24,7 +27,7 @@ import 'package:orbitpatter/firebase_options.dart';
 
 final getIt = GetIt.instance;
 
-void main() async{
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Initialize Firebase with the default options
@@ -32,6 +35,16 @@ void main() async{
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
+
+
+    LoggerUtil.init();
+
+    _setupDependencies();
+
+    FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+
+    await getIt<NotificationService>().init();
+
   } catch (e) {
     print('Error initializing Firebase: $e');
   }
@@ -42,9 +55,6 @@ void main() async{
   Hive.registerAdapter(LocationModelAdapter());
   await Hive.openBox<LocationModel>('location_box');
 
-  _setupDependencies();
-
-  LoggerUtil.init();
 
   runApp(
     DevicePreview(
@@ -55,62 +65,71 @@ void main() async{
 }
 
 void _setupDependencies() {
-  getIt.registerSingleton<AuthRepository>(AuthRepository());
+  getIt.registerSingleton<FirebaseFirestore>(FirebaseFirestore.instance);
+  
+  //FCM
+  getIt.registerLazySingleton<FirebaseMessaging>(
+     () => FirebaseMessaging.instance,
+  );
+  getIt.registerLazySingleton<NotificationService>(
+    () => NotificationService(getIt<FirebaseMessaging>()),
+  );
+
+
+  // Provide AuthRepository with NotificationService so it can get current device FCM token
+  getIt.registerSingleton<AuthRepository>(AuthRepository(getIt<NotificationService>()));
   getIt.registerSingleton<LocationService>(LocationService()); // Add this
   getIt.registerSingleton<HiveService>(HiveService());
   getIt.registerSingleton<OpenTripMapRepo>(OpenTripMapRepo());
   getIt.registerSingleton<ChatRepository>(ChatRepository());
-  getIt.registerSingleton<MessageRepository>(MessageRepository());
+  getIt.registerSingleton<MessageRepository>(MessageRepository(getIt<FirebaseFirestore>(), getIt<NotificationService>()));
 
+  
 
   // Register other dependencies as needed
-  getIt.registerFactory<LoginBloc>(() => LoginBloc(
-    authRepository: getIt<AuthRepository>(),
-  ));
-  getIt.registerFactory<LocationBloc>(() => LocationBloc(getIt<LocationService>()));
-  getIt.registerFactory<ChatBloc>(() => ChatBloc(getIt<ChatRepository>(), getIt<AuthRepository>()));
+  getIt.registerFactory<LoginBloc>(
+    () => LoginBloc(authRepository: getIt<AuthRepository>()),
+  );
+  getIt.registerFactory<LocationBloc>(
+    () => LocationBloc(getIt<LocationService>()),
+  );
+  getIt.registerFactory<ChatBloc>(
+    () => ChatBloc(getIt<ChatRepository>(), getIt<AuthRepository>()),
+  );
   getIt.registerFactory<UsersBloc>(() => UsersBloc(getIt<AuthRepository>()));
-  getIt.registerFactory<MessageBloc>(() => MessageBloc(getIt<MessageRepository>(), getIt<ChatRepository>()));
+  getIt.registerFactory<MessageBloc>(
+    () => MessageBloc(getIt<MessageRepository>(), getIt<ChatRepository>()),
+  );
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
-
-
 
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MultiRepositoryProvider(
       providers: [
-        RepositoryProvider(
-          create: (context) => AuthRepository(),
-        ),
-        RepositoryProvider(
-          create: (context) => OpenTripMapRepo(),
-        ),
-        RepositoryProvider(
-          create: (context) => ChatRepository(),
-        ),
-        RepositoryProvider(
-          create: (context) => MessageRepository(),
-        ),
+        // Use getIt singletons so instances (and NotificationService) are shared
+        RepositoryProvider(create: (context) => getIt<AuthRepository>()),
+        RepositoryProvider(create: (context) => getIt<OpenTripMapRepo>()),
+        RepositoryProvider(create: (context) => getIt<ChatRepository>()),
+        RepositoryProvider(create: (context) => getIt<MessageRepository>()),
       ],
       child: MultiBlocProvider(
         providers: [
           BlocProvider(create: (context) => getIt<LoginBloc>()),
-          BlocProvider<LocationBloc>(
-            create: (_) => getIt<LocationBloc>(),
-          ),
-          BlocProvider<ChatBloc>(
-            create: (_) => getIt<ChatBloc>(),
-          ),
+          BlocProvider<LocationBloc>(create: (_) => getIt<LocationBloc>()),
+          BlocProvider<ChatBloc>(create: (_) => getIt<ChatBloc>()),
           BlocProvider(create: (_) => getIt<UsersBloc>()),
           BlocProvider<MessageBloc>(
-  create: (_) => MessageBloc(getIt<MessageRepository>(), getIt<ChatRepository>()),
-),
+            create: (_) => MessageBloc(
+              getIt<MessageRepository>(),
+              getIt<ChatRepository>(),
+            ),
+          ),
         ],
-        child:  MaterialApp.router(
+        child: MaterialApp.router(
           debugShowCheckedModeBanner: false,
           theme: AppTheme.light,
           darkTheme: AppTheme.dark,

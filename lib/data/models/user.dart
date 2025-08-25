@@ -7,6 +7,7 @@ class UserModel {
   final String? photoUrl;
   final String? bio;
   final DateTime createdAt;
+  final List<String> fcmtTokens;
 
   UserModel({
     required this.uid,
@@ -15,6 +16,7 @@ class UserModel {
     required this.photoUrl,
     this.bio,
     required this.createdAt,
+    required this.fcmtTokens,
   });
 
   // Factory method to create a UserModel from a Map
@@ -26,6 +28,7 @@ class UserModel {
       photoUrl: data['photoUrl'] ?? '',
       bio: data['bio'],
       createdAt: (data['createdAt'] as Timestamp).toDate(),
+      fcmtTokens: List<String>.from(data['fcmtTokens'] ?? []),
     );
   }
 
@@ -38,6 +41,7 @@ class UserModel {
       'photoUrl': photoUrl,
       'bio': bio,
       'createdAt': createdAt,
+      'fcmtTokens': fcmtTokens,
     };
   }
 }

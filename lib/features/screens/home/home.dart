@@ -46,7 +46,7 @@ class _HomeState extends State<Home> {
       }
     });
 
-    OpenTripMapRepo().fetchPlaces(73.0551, 33.6844, "shops");
+    // OpenTripMapRepo().fetchPlaces(73.0551, 33.6844, "shops");
 
     Future.delayed(const Duration(seconds: 2), () {
       if (!mounted) return;

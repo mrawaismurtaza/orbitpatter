@@ -1,30 +1,27 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:orbitpatter/data/models/user.dart';
 
 class ChatModel {
   final String id;
-  final List<String> participants;
+  final List<UserModel> participants;
   final DateTime createdAt;
   final String lastMessage;
-  final String receiverName;
-  final String receiverId;
 
   ChatModel({
     required this.id,
     required this.participants,
     required this.createdAt,
     required this.lastMessage,
-    required this.receiverName,
-    required this.receiverId,
   });
 
   factory ChatModel.fromMap(Map<String, dynamic> data, String docId) {
     return ChatModel(
       id: docId,
-      participants: List<String>.from(data['participants'] ?? []),
+      participants: List<UserModel>.from(
+        data['participants']?.map((user) => UserModel.fromMap(user)) ?? [],
+      ),
       createdAt: (data['createdAt'] as Timestamp).toDate(),
       lastMessage: data['lastMessage'] ?? '',
-      receiverName: data['receiverName'] ?? '',
-      receiverId: data['receiverId'],
     );
   }
 
@@ -34,8 +31,6 @@ class ChatModel {
       'participants': participants,
       'createdAt': Timestamp.fromDate(createdAt),
       'lastMessage': lastMessage,
-      'receiverName': receiverName,
-      'receiverId': receiverId,
     };
   }
 }

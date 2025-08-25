@@ -1,4 +1,5 @@
 import 'package:orbitpatter/data/models/message.dart';
+import 'package:orbitpatter/data/models/user.dart';
 
 abstract class MessageEvent {}
 
@@ -13,22 +14,21 @@ class FetchMessagesEvent extends MessageEvent {
 class SendMessageEvent extends MessageEvent {
   final MessageModel message;
   final String chatId;
+  final List<String> receiverFcmToken;
 
-  SendMessageEvent(this.message, this.chatId);
+  SendMessageEvent(this.message, this.chatId, {required this.receiverFcmToken});
 }
 
 class SendMessageWithChatCheckEvent extends MessageEvent {
-  final MessageModel message;
   final String chatId;
-  final List<String> participants;
-  final String receiverId;
-  final String receiverName;
+  final List<UserModel> participants;
+  final MessageModel message;
+  final List<String> receiverFcmToken;
 
   SendMessageWithChatCheckEvent(
-    this.message,
     this.chatId,
     this.participants,
-    this.receiverId,
-    this.receiverName,
+    this.message,
+    this.receiverFcmToken,
   );
 }

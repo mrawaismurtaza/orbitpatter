@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:orbitpatter/data/models/message.dart';
 import 'package:orbitpatter/data/models/user.dart';
+import 'package:orbitpatter/features/blocs/auth/login_bloc.dart';
 import 'package:orbitpatter/features/blocs/message/message_bloc.dart';
 import 'package:orbitpatter/features/blocs/message/message_event.dart';
 import 'package:orbitpatter/features/blocs/message/message_state.dart';
@@ -19,6 +20,7 @@ class ChatPage extends StatefulWidget {
 
 class _ChatPageState extends State<ChatPage> {
   final TextEditingController _messageController = TextEditingController();
+  List<MessageModel> _cachedMessages = [];
 
   @override
   void initState() {
@@ -29,6 +31,11 @@ class _ChatPageState extends State<ChatPage> {
       widget.user.uid,
     );
     context.read<MessageBloc>().add(FetchMessagesEvent([], chatId));
+  }
+
+  Future<List<UserModel>> _getParticipants() async {
+    final user = await context.read<LoginBloc>().authRepository.getCurrentUser();
+    return [user, widget.user];
   }
 
   String getChatId(String uid1, String uid2) {
@@ -77,15 +84,32 @@ class _ChatPageState extends State<ChatPage> {
           Expanded(
             child: BlocBuilder<MessageBloc, MessagesState>(
               builder: (context, state) {
-                if (state is MessagesLoading) {
-                  return Center(child: CircularProgressIndicator());
-                } else if (state is MessagesLoaded) {
-                  return ListView.separated(
-                    reverse: true,
-                    padding: const EdgeInsets.all(10.0),
-                    itemCount: state.messages.length,
-                    itemBuilder: (context, index) {
-                      final message = state.messages[index];
+                if (state is MessagesLoaded) {
+                  _cachedMessages = state.messages;
+                }
+
+                final messagesToShow = state is MessagesLoaded
+                    ? state.messages
+                    : _cachedMessages;
+
+                if (messagesToShow.isEmpty) {
+                  if (state is MessagesLoading) {
+                    return const Center(child: CircularProgressIndicator());
+                  } else if (state is MessagesInitial) {
+                    return Center(child: Text('No Messages Yet'));
+                  } else if (state is MessagesError) {
+                    return Center(child: Text('Failed to load chat'));
+                  } else {
+                    return const Center(child: Text('No Messages Yet'));
+                  }
+                }
+
+                return ListView.separated(
+                  reverse: true,
+                  padding: const EdgeInsets.all(10.0),
+                  itemCount: messagesToShow.length,
+                  itemBuilder: (context, index) {
+                      final message = messagesToShow[index];
                       return Align(
                         alignment:
                             message.senderId ==
@@ -129,14 +153,11 @@ class _ChatPageState extends State<ChatPage> {
                     separatorBuilder: (context, index) =>
                         const SizedBox(height: 8),
                   );
-                } else if (state is MessagesInitial) {
-                  return Center(child: Text('No messages yet'));
-                } else {
-                  return Center(child: Text('Failed to load chat'));
-                }
+                
               },
             ),
           ),
+          
           Padding(
             padding: const EdgeInsets.only(left: 16, right: 16, bottom: 30),
             child: Row(
@@ -160,17 +181,13 @@ class _ChatPageState extends State<ChatPage> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                   ),
-                  onPressed: () {
+                  onPressed: () async {
                     if (_messageController.text.trim().isNotEmpty) {
                       final chatId = getChatId(
                         FirebaseAuth.instance.currentUser!.uid,
                         widget.user.uid,
                       );
-                      final participants = [
-                        FirebaseAuth.instance.currentUser!.uid,
-                        widget.user.uid,
-                      ];
-            
+
                       final message = MessageModel(
                         id: const Uuid()
                             .v4(), // Generate a unique ID for the message
@@ -179,14 +196,15 @@ class _ChatPageState extends State<ChatPage> {
                         createdAt:
                             DateTime.now(), // Use server timestamp when saving to Firestore
                       );
+
+                      final participants = await _getParticipants();
             
                       context.read<MessageBloc>().add(
                         SendMessageWithChatCheckEvent(
-                          message,
                           chatId,
                           participants,
-                          widget.user.uid,
-                          widget.user.name,
+                          message,
+                          widget.user.fcmtTokens,
                         ),
                       );
             
